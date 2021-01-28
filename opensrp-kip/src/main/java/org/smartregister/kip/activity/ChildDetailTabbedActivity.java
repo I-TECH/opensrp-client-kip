@@ -16,6 +16,7 @@ import org.smartregister.AllConstants;
 import org.smartregister.child.activity.BaseChildDetailTabbedActivity;
 import org.smartregister.child.fragment.StatusEditDialogFragment;
 import org.smartregister.child.task.LoadAsyncTask;
+import org.smartregister.child.util.ChildDbUtils;
 import org.smartregister.kip.R;
 import org.smartregister.kip.fragment.ChildRegistrationDataFragment;
 import org.smartregister.kip.util.KipChildUtils;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import timber.log.Timber;
 
@@ -39,7 +41,7 @@ import static org.smartregister.kip.util.KipChildUtils.setAppLocale;
  * Created by ndegwamartin on 06/03/2019.
  */
 public class ChildDetailTabbedActivity extends BaseChildDetailTabbedActivity {
-    private static List<String> nonEditableFields = Arrays.asList("Date_Birth", "Sex", "zeir_id", "Birth_Weight", "Birth_Height", "Birth_Facility_Name");
+    private static List<String> nonEditableFields = Arrays.asList("Sex", "zeir_id", "Birth_Weight", "Birth_Height");
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -49,8 +51,8 @@ public class ChildDetailTabbedActivity extends BaseChildDetailTabbedActivity {
     }
 
     @Override
-    public void onUniqueIdFetched(Triple<String, String, String> triple, String entityId) {
-        // Todo
+    public void onUniqueIdFetched(Triple<String, Map<String, String>, String> triple, String s) {
+
     }
 
     @Override
@@ -73,7 +75,9 @@ public class ChildDetailTabbedActivity extends BaseChildDetailTabbedActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
-        detailsMap = getChildDetails().getColumnmaps();
+        detailsMap = ChildDbUtils.fetchChildDetails(getChildDetails().entityId());
+        detailsMap.putAll(ChildDbUtils.fetchChildFirstGrowthAndMonitoring(getChildDetails().entityId()));
+
         switch (item.getItemId()) {
             case R.id.registration_data:
                 String populatedForm = KipJsonFormUtils.getMetadataForEditForm(this, detailsMap, nonEditableFields);
@@ -146,10 +150,24 @@ public class ChildDetailTabbedActivity extends BaseChildDetailTabbedActivity {
 
     @Override
     protected void navigateToRegisterActivity() {
-        Intent intent = new Intent(getApplicationContext(), org.smartregister.kip.activity.ChildRegisterActivity.class);
+        Intent intent = new Intent(getApplicationContext(), ChildRegisterActivity.class);
         intent.putExtra(AllConstants.INTENT_KEY.IS_REMOTE_LOGIN, false);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void startFormActivity(String formData) {
+        Form formParam = new Form();
+        formParam.setWizard(false);
+        formParam.setHideSaveLabel(true);
+        formParam.setNextLabel("");
+
+        Intent intent = new Intent(getApplicationContext(), org.smartregister.child.util.Utils.metadata().childFormActivity);
+        intent.putExtra(JsonFormConstants.JSON_FORM_KEY.FORM, formParam);
+        intent.putExtra(JsonFormConstants.JSON_FORM_KEY.JSON, formData);
+
+        startActivityForResult(intent, REQUEST_CODE_GET_JSON);
     }
 
     @Override
@@ -182,19 +200,5 @@ public class ChildDetailTabbedActivity extends BaseChildDetailTabbedActivity {
             Timber.e(e);
         }
         return "";
-    }
-
-    @Override
-    public void startFormActivity(String formData) {
-        Form formParam = new Form();
-        formParam.setWizard(false);
-        formParam.setHideSaveLabel(true);
-        formParam.setNextLabel("");
-
-        Intent intent = new Intent(getApplicationContext(), org.smartregister.child.util.Utils.metadata().childFormActivity);
-        intent.putExtra(JsonFormConstants.JSON_FORM_KEY.FORM, formParam);
-        intent.putExtra(JsonFormConstants.JSON_FORM_KEY.JSON, formData);
-
-        startActivityForResult(intent, REQUEST_CODE_GET_JSON);
     }
 }

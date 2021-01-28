@@ -1,16 +1,12 @@
 package org.smartregister.kip.fragment;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
+
 import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
@@ -19,6 +15,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.vijay.jsonwizard.customviews.MaterialSpinner;
 import com.vijay.jsonwizard.fragments.JsonFormFragment;
@@ -28,7 +28,6 @@ import com.vijay.jsonwizard.viewstates.JsonFormFragmentViewState;
 import com.vijay.jsonwizard.widgets.DatePickerFactory;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.smartregister.Context;
 import org.smartregister.child.interactor.ChildFormInteractor;
 import org.smartregister.child.provider.MotherLookUpSmartClientsProvider;
@@ -37,7 +36,6 @@ import org.smartregister.commonregistry.CommonPersonObject;
 import org.smartregister.commonregistry.CommonPersonObjectClient;
 import org.smartregister.event.Listener;
 import org.smartregister.kip.R;
-import org.smartregister.kip.activity.KipJsonFormReportsActivity;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.util.KipConstants;
 import org.smartregister.kip.util.KipMotherLookUpUtils;
@@ -230,12 +228,12 @@ public class KipJsonFormFragment extends JsonFormFragment {
         snackbarView.setMinimumHeight(Float.valueOf(textSize).intValue());
         snackbarView.setBackgroundResource(R.color.snackbar_background_yellow);
 
-        final Button actionView = snackbarView.findViewById(android.support.design.R.id.snackbar_action);
+        final Button actionView = snackbarView.findViewById(R.id.snackbar_action);
         actionView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         actionView.setGravity(Gravity.CENTER);
         actionView.setTextColor(getResources().getColor(R.color.text_black));
 
-        TextView textView = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = snackbarView.findViewById(R.id.snackbar_text);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         textView.setGravity(Gravity.CENTER);
         textView.setOnClickListener(new View.OnClickListener() {
@@ -386,61 +384,4 @@ public class KipJsonFormFragment extends JsonFormFragment {
         }
     };
 
-    public String getRelevantTextViewString(String currentKey) {
-        String toreturn = "";
-        if (getMainView() != null) {
-            int childCount = getMainView().getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                View view = getMainView().getChildAt(i);
-                if (view instanceof TextView) {
-                    TextView textView = (TextView) view;
-                    String key = (String) textView.getTag(com.vijay.jsonwizard.R.id.key);
-                    if (key.equals(currentKey)) {
-                        toreturn = textView.getText().toString();
-                    }
-                }
-            }
-        }
-        return toreturn;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        boolean fillFormCheck = true;
-
-        if (item.getItemId() == com.vijay.jsonwizard.R.id.action_save) {
-            JSONObject object = getStep("step1");
-            try {
-                if (object.getString(KipConstants.KEY.TITLE).contains("Record out of catchment area service")) {
-                    fillFormCheck = ((KipJsonFormReportsActivity) getActivity()).checkIfAtLeastOneServiceGiven();
-                }
-            } catch (Exception e) {
-                Timber.e(e);
-            }
-        }
-
-        if (fillFormCheck) {
-            return super.onOptionsItemSelected(item);
-        } else {
-            String errorMessage = getString(R.string.fill_form_error_msg);
-
-            final Snackbar snackbar = Snackbar
-                    .make(getMainView(), errorMessage, Snackbar.LENGTH_LONG);
-            snackbar.setAction(R.string.close, new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    snackbar.dismiss();
-                }
-            });
-
-            // Changing message text color
-            snackbar.setActionTextColor(Color.WHITE);
-            View sbView = snackbar.getView();
-            TextView textView = sbView.findViewById(android.support.design.R.id.snackbar_text);
-            textView.setTextColor(Color.WHITE);
-
-            snackbar.show();
-            return true;
-        }
-    }
 }

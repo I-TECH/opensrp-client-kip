@@ -19,6 +19,7 @@ public class KipConstants {
         String ANC = "anc";
         String CHILD = "child";
         String OPD = "opd";
+        String ALL_CLIENTS = "all_clients";
     }
 
     public static final class KEY {
@@ -187,6 +188,8 @@ public class KipConstants {
         public static final String PNC = "PNC";
         public static final String FAMILY_PLANNING = "Family Planning";
         public static final String MALARIA = "Malaria";
+
+        public static final String OPD_CLIENTS = "OPD Clients";
     }
 
     public static final class FormTitleUtil {

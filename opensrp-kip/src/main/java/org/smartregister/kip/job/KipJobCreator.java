@@ -1,8 +1,9 @@
 package org.smartregister.kip.job;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.evernote.android.job.Job;
 import com.evernote.android.job.JobCreator;
@@ -49,12 +50,11 @@ public class KipJobCreator implements JobCreator {
             case RecurringIndicatorGeneratingJob.TAG:
                 return new RecurringIndicatorGeneratingJob();
             case KipVaccineUpdateJob.TAG:
-                return new KipVaccineUpdateJob();
             case KipVaccineUpdateJob.SCHEDULE_ADHOC_TAG:
                 return new KipVaccineUpdateJob();
-
             case ImageUploadServiceJob.TAG:
                 return new ImageUploadServiceJob();
+
             default:
                 Log.w(KipJobCreator.class.getCanonicalName(), tag + " is not declared in Job Creator");
                 return null;

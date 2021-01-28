@@ -2,22 +2,25 @@ package org.smartregister.kip.processor;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
+import org.smartregister.child.util.ChildDbUtils;
+import org.smartregister.child.util.ChildJsonFormUtils;
 import org.smartregister.child.util.Constants;
-import org.smartregister.child.util.JsonFormUtils;
 import org.smartregister.child.util.MoveToMyCatchmentUtils;
 import org.smartregister.child.util.Utils;
 import org.smartregister.clientandeventmodel.DateUtil;
 import org.smartregister.commonregistry.AllCommonsRepository;
-import org.smartregister.domain.db.Client;
-import org.smartregister.domain.db.Event;
+import org.smartregister.domain.Client;
+import org.smartregister.domain.Event;
 import org.smartregister.domain.db.EventClient;
 import org.smartregister.domain.jsonmapping.ClientClassification;
 import org.smartregister.domain.jsonmapping.ClientField;
@@ -39,10 +42,15 @@ import org.smartregister.immunization.repository.RecurringServiceTypeRepository;
 import org.smartregister.immunization.repository.VaccineRepository;
 import org.smartregister.immunization.service.intent.RecurringIntentService;
 import org.smartregister.immunization.service.intent.VaccineIntentService;
+import org.smartregister.immunization.util.JsonFormUtils;
 import org.smartregister.kip.activity.ChildImmunizationActivity;
 import org.smartregister.kip.application.KipApplication;
+import org.smartregister.kip.util.AppExecutors;
 import org.smartregister.kip.util.KipChildUtils;
 import org.smartregister.kip.util.KipConstants;
+import org.smartregister.opd.processor.OpdMiniClientProcessorForJava;
+import org.smartregister.opd.utils.ConstantsUtils;
+import org.smartregister.opd.utils.OpdConstants;
 import org.smartregister.repository.DetailsRepository;
 import org.smartregister.repository.EventClientRepository;
 import org.smartregister.sync.ClientProcessorForJava;
@@ -52,6 +60,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,12 +76,19 @@ public class KipProcessorForJava extends ClientProcessorForJava {
     private HashMap<MiniClientProcessorForJava, List<Event>> unsyncEventsPerProcessor = new HashMap<>();
 
     private HashMap<String, DateTime> clientsForAlertUpdates = new HashMap<>();
+    private AppExecutors appExecutors = new AppExecutors();
+
+    private List<String> coreProcessedEvents = Arrays.asList(Constants.EventType.BITRH_REGISTRATION, Constants.EventType.UPDATE_BITRH_REGISTRATION,
+            Constants.EventType.NEW_WOMAN_REGISTRATION, OpdConstants.EventType.OPD_REGISTRATION, OpdConstants.EventType.UPDATE_OPD_REGISTRATION,
+            Constants.EventType.AEFI, Constants.EventType.ARCHIVE_CHILD_RECORD);
 
     private KipProcessorForJava(Context context) {
         super(context);
+        OpdMiniClientProcessorForJava opdMiniClientProcessorForJava = new OpdMiniClientProcessorForJava(context);
+        addMiniProcessors(opdMiniClientProcessorForJava);
     }
 
-    protected void addMiniProcessors(MiniClientProcessorForJava... miniClientProcessorsForJava) {
+    public void addMiniProcessors(MiniClientProcessorForJava... miniClientProcessorsForJava) {
         for (MiniClientProcessorForJava miniClientProcessorForJava : miniClientProcessorsForJava) {
             unsyncEventsPerProcessor.put(miniClientProcessorForJava, new ArrayList<Event>());
 
@@ -100,7 +116,6 @@ public class KipProcessorForJava extends ClientProcessorForJava {
         Table weightTable = assetJsonToJava("ec_client_weight.json", Table.class);
         Table heightTable = assetJsonToJava("ec_client_height.json", Table.class);
         Table serviceTable = assetJsonToJava("ec_client_service.json", Table.class);
-
         if (!eventClients.isEmpty()) {
             List<Event> unsyncEvents = new ArrayList<>();
             for (EventClient eventClient : eventClients) {
@@ -114,13 +129,9 @@ public class KipProcessorForJava extends ClientProcessorForJava {
                     continue;
                 }
 
-                if (processOverOneYearChild(eventClient)){
-                    unsyncEvents.add(event);
-                }
-
                 if (eventType.equals(VaccineIntentService.EVENT_TYPE) || eventType
                         .equals(VaccineIntentService.EVENT_TYPE_OUT_OF_CATCHMENT)) {
-                    processVaccinationEvent(vaccineTable, eventClient, event, eventType);
+                    processVaccinationEvent(vaccineTable, eventClient);
                 } else if (eventType.equals(WeightIntentService.EVENT_TYPE) || eventType
                         .equals(WeightIntentService.EVENT_TYPE_OUT_OF_CATCHMENT)) {
                     processWeightEvent(weightTable, heightTable, eventClient, eventType);
@@ -129,32 +140,16 @@ public class KipProcessorForJava extends ClientProcessorForJava {
                         continue;
                     }
                     processService(eventClient, serviceTable);
-                } else if (eventType.equals(JsonFormUtils.BCG_SCAR_EVENT)) {
+                } else if (eventType.equals(ChildJsonFormUtils.BCG_SCAR_EVENT)) {
                     processBCGScarEvent(eventClient);
                 } else if (eventType.equals(MoveToMyCatchmentUtils.MOVE_TO_CATCHMENT_EVENT)) {
                     unsyncEvents.add(event);
-                } else if (eventType.equals(Constants.EventType.DEATH)) {
-                    if (processDeathEvent(eventClient)) {
+                } else if (eventType.equalsIgnoreCase(Constants.EventType.DEATH)) {
+                    if (processDeathEvent(eventClient, clientClassification)) {
                         unsyncEvents.add(event);
                     }
-                } else if (eventType.equals(Constants.EventType.BITRH_REGISTRATION) || eventType
-                        .equals(Constants.EventType.UPDATE_BITRH_REGISTRATION) || eventType
-                        .equals(Constants.EventType.NEW_WOMAN_REGISTRATION)) {
-
-
-                    if (eventClient.getClient() == null) {
-                        Timber.e(new Exception(), "Cannot find client corresponding to with base-entity-id %s",event.getBaseEntityId());
-                        continue;
-                    }
-
-                    if(eventType.equals(Constants.EventType.BITRH_REGISTRATION) && eventClient.getClient() != null){
-                        KipApplication.getInstance().registerTypeRepository().add(KipConstants.RegisterType.CHILD, event.getBaseEntityId());
-                    }
-                    if (clientClassification == null) {
-                        continue;
-                    }
-
-                    processBirthAndWomanRegistrationEvent(clientClassification, eventClient, event);
+                } else if (coreProcessedEvents.contains(eventType)) {
+                    processKipCoreEvents(clientClassification, eventClient, event, eventType);
                 } else if (processorMap.containsKey(eventType)) {
                     try {
                         processEventUsingMiniprocessor(clientClassification, eventClient, eventType);
@@ -168,36 +163,50 @@ public class KipProcessorForJava extends ClientProcessorForJava {
             processUnsyncEvents(unsyncEvents);
 
             // Process alerts for clients
-            updateClientAlerts(clientsForAlertUpdates);
+            Runnable runnable = () -> updateClientAlerts(clientsForAlertUpdates);
+
+            appExecutors.diskIO().execute(runnable);
+        }
+    }
+
+    public void processKipCoreEvents(ClientClassification clientClassification, EventClient eventClient, Event event, String eventType) throws Exception {
+        if (eventType.equals(OpdConstants.EventType.OPD_REGISTRATION) && eventClient.getClient() != null) {
+            KipApplication.getInstance().registerTypeRepository().addUnique(KipConstants.RegisterType.OPD, event.getBaseEntityId());
+        } else if (eventType.equals(Constants.EventType.BITRH_REGISTRATION) && eventClient.getClient() != null &&
+                (KipApplication.getInstance().context().getEventClientRepository().getEventsByBaseEntityIdAndEventType(event.getBaseEntityId(), Constants.EventType.ARCHIVE_CHILD_RECORD) == null)) {
+            KipApplication.getInstance().registerTypeRepository().addUnique(KipConstants.RegisterType.CHILD, event.getBaseEntityId());
+        } else if (eventType.equals(Constants.EventType.NEW_WOMAN_REGISTRATION) && eventClient.getClient() != null) {
+            KipApplication.getInstance().registerTypeRepository().addUnique(KipConstants.RegisterType.OPD, event.getBaseEntityId());
+        }
+//        else if (eventType.equals(Constants.EventType.ARCHIVE_CHILD_RECORD) && eventClient.getClient() != null) {
+//            KipApplication.getInstance().registerTypeRepository().removeAll(event.getBaseEntityId());
+//        }
+
+
+        if (clientClassification != null) {
+            processEventClient(clientClassification, eventClient, event);
         }
     }
 
     private void updateClientAlerts(@NonNull HashMap<String, DateTime> clientsForAlertUpdates) {
-
-        for (String baseEntityId: clientsForAlertUpdates.keySet()) {
+        HashMap<String, DateTime> stringDateTimeHashMap = SerializationUtils.clone(clientsForAlertUpdates);
+        for (String baseEntityId : stringDateTimeHashMap.keySet()) {
             DateTime birthDateTime = clientsForAlertUpdates.get(baseEntityId);
             if (birthDateTime != null) {
-                VaccineSchedule.updateOfflineAlerts(baseEntityId, birthDateTime, "child");
-                ServiceSchedule.updateOfflineAlerts(baseEntityId, birthDateTime);
+                updateOfflineAlerts(baseEntityId, birthDateTime);
             }
         }
-
         clientsForAlertUpdates.clear();
     }
 
-    private boolean processDeathEvent(@NonNull EventClient eventClient) {
-        if (eventClient.getEvent().getEntityType().equals(KipConstants.EntityType.CHILD)) {
-            return KipChildUtils.updateChildDeath(eventClient);
+    private boolean processDeathEvent(@NonNull EventClient eventClient, ClientClassification clientClassification) {
+        try {
+            KipApplication.getInstance().registerTypeRepository().removeAll(eventClient.getEvent().getBaseEntityId());
+            processEvent(eventClient.getEvent(), eventClient.getClient(), clientClassification);
+        } catch (Exception e) {
+            Timber.e(e);
         }
-
-        return false;
-    }
-
-    private boolean processOverOneYearChild(@NonNull EventClient eventClient){
-        if (eventClient.getEvent().getEntityType().equals(KipConstants.EntityType.CHILD)){
-            return KipChildUtils.updateChildOverOneyear(eventClient);
-        }
-        return false;
+        return KipChildUtils.updateClientDeath(eventClient);
     }
 
     private void processUnsyncEvents(@NonNull List<Event> unsyncEvents) {
@@ -211,14 +220,11 @@ public class KipProcessorForJava extends ClientProcessorForJava {
         }
     }
 
-    private void processBirthAndWomanRegistrationEvent(@NonNull ClientClassification clientClassification, @NonNull EventClient eventClient, @NonNull Event event) {
+    private void processEventClient(@NonNull ClientClassification clientClassification, @NonNull EventClient eventClient, @NonNull Event event) {
         Client client = eventClient.getClient();
-        //iterate through the events
         if (client != null) {
             try {
                 processEvent(event, client, clientClassification);
-
-                scheduleUpdatingClientAlerts(client.getBaseEntityId(), client.getBirthdate());
             } catch (Exception e) {
                 Timber.e(e);
             }
@@ -234,6 +240,7 @@ public class KipProcessorForJava extends ClientProcessorForJava {
                 unsyncEventsPerProcessor.put(miniClientProcessorForJava, processorUnsyncEvents);
             }
 
+            completeProcessing(eventClient.getEvent());
             miniClientProcessorForJava.processEventClient(eventClient, processorUnsyncEvents, clientClassification);
         }
     }
@@ -253,29 +260,29 @@ public class KipProcessorForJava extends ClientProcessorForJava {
                 eventType.equals(HeightIntentService.EVENT_TYPE_OUT_OF_CATCHMENT));
     }
 
-    private void processVaccinationEvent(Table vaccineTable, EventClient eventClient, Event event, String eventType) throws Exception {
-        if (vaccineTable == null) {
-            return;
-        }
-        Client client = eventClient.getClient();
-        if (client != null && !childExists(client.getBaseEntityId())) {
-            List<String> createCase = new ArrayList<>();
-//            createCase.add("ec_child_details");
-            createCase.add(Utils.metadata().childRegister.tableName);
-            processCaseModel(event,client, createCase);
-        }
+    private void processVaccinationEvent(Table vaccineTable, EventClient eventClient) throws Exception {
+        if (vaccineTable != null) {
 
-        processVaccine(eventClient, vaccineTable,
-                eventType.equals(VaccineIntentService.EVENT_TYPE_OUT_OF_CATCHMENT));
+            Client client = eventClient.getClient();
+            Event event = eventClient.getEvent();
+            if (!childExists(client.getBaseEntityId())) {
+                List<String> createCase = new ArrayList<>();
+                createCase.add(KipConstants.TABLE_NAME.ALL_CLIENTS);
+                processCaseModel(event, client, createCase);
+            }
 
-//        scheduleUpdatingClientAlerts(client.getBaseEntityId(), client.getBirthdate());
+            processVaccine(eventClient, vaccineTable,
+                    VaccineIntentService.EVENT_TYPE_OUT_OF_CATCHMENT.equals(event.getEventType()));
+
+            scheduleUpdatingClientAlerts(client.getBaseEntityId(), client.getBirthdate());
+        }
     }
 
     private boolean childExists(String entityId) {
         return KipApplication.getInstance().eventClientRepository().checkIfExists(EventClientRepository.Table.client, entityId);
     }
 
-    private Boolean processVaccine(@Nullable EventClient vaccine, @Nullable Table vaccineTable, boolean outOfCatchment) throws Exception {
+    private Boolean processVaccine(@Nullable EventClient vaccine, @Nullable Table vaccineTable, boolean outOfCatchment) {
         try {
             if (vaccine == null || vaccine.getEvent() == null) {
                 return false;
@@ -545,8 +552,7 @@ public class KipProcessorForJava extends ClientProcessorForJava {
             date = eventDate.getMillis();
         }
 
-        DetailsRepository detailsRepository = KipApplication.getInstance().context().detailsRepository();
-        detailsRepository.add(baseEntityId, ChildImmunizationActivity.SHOW_BCG_SCAR, String.valueOf(date), date);
+        ChildDbUtils.updateChildDetailsValue(Constants.SHOW_BCG_SCAR, String.valueOf(date), baseEntityId);
     }
 
     private boolean unSync(List<Event> events) {
@@ -643,9 +649,6 @@ public class KipProcessorForJava extends ClientProcessorForJava {
 
     @Override
     public void updateFTSsearch(String tableName, String entityId, ContentValues contentValues) {
-        if (KipConstants.TABLE_NAME.MOTHER_TABLE_NAME.equals(tableName)) {
-            return;
-        }
 
         Timber.d("Starting updateFTSsearch table: %s", tableName);
 
@@ -656,16 +659,25 @@ public class KipProcessorForJava extends ClientProcessorForJava {
             allCommonsRepository.updateSearch(entityId);
         }
 
-        if (contentValues != null && StringUtils.containsIgnoreCase(tableName, "child")) {
+        boolean isInRegister = KipApplication.getInstance().registerTypeRepository().findByRegisterType(entityId, KipConstants.RegisterType.CHILD);
+
+        if (contentValues != null &&
+                KipConstants.TABLE_NAME.ALL_CLIENTS.equals(tableName) &&
+                isInRegister) {
             String dobString = contentValues.getAsString(Constants.KEY.DOB);
-            DateTime birthDateTime = Utils.dobStringToDateTime(dobString);
-            if (birthDateTime != null) {
-                VaccineSchedule.updateOfflineAlerts(entityId, birthDateTime, "child");
-                ServiceSchedule.updateOfflineAlerts(entityId, birthDateTime);
+            if (StringUtils.isNotBlank(dobString)) {
+                DateTime birthDateTime = Utils.dobStringToDateTime(dobString);
+                if (birthDateTime != null) {
+                    updateOfflineAlerts(entityId, birthDateTime);
+                }
             }
         }
-
         Timber.d("Finished updateFTSsearch table: %s", tableName);
+    }
+
+    protected void updateOfflineAlerts(@NonNull String entityId, @NonNull DateTime birthDateTime) {
+        VaccineSchedule.updateOfflineAlerts(entityId, birthDateTime, KipConstants.RegisterType.CHILD);
+        ServiceSchedule.updateOfflineAlerts(entityId, birthDateTime);
     }
 
     @Override

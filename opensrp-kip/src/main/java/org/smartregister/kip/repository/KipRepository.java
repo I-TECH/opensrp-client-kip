@@ -1,12 +1,13 @@
 package org.smartregister.kip.repository;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import net.sqlcipher.database.SQLiteDatabase;
 
 import org.apache.commons.lang3.StringUtils;
 import org.smartregister.AllConstants;
+import org.smartregister.child.util.ChildDbMigrations;
 import org.smartregister.child.util.Utils;
 import org.smartregister.configurableviews.repository.ConfigurableViewsRepository;
 import org.smartregister.domain.db.Column;
@@ -21,6 +22,12 @@ import org.smartregister.immunization.util.IMDatabaseUtils;
 import org.smartregister.kip.BuildConfig;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.util.KipConstants;
+import org.smartregister.opd.repository.OpdDetailsRepository;
+import org.smartregister.opd.repository.OpdDiagnosisAndTreatmentFormRepository;
+import org.smartregister.opd.repository.OpdDiagnosisDetailRepository;
+import org.smartregister.opd.repository.OpdTestConductedRepository;
+import org.smartregister.opd.repository.OpdTreatmentDetailRepository;
+import org.smartregister.opd.repository.OpdVisitRepository;
 import org.smartregister.reporting.ReportingLibrary;
 import org.smartregister.reporting.repository.DailyIndicatorCountRepository;
 import org.smartregister.reporting.repository.IndicatorQueryRepository;
@@ -69,6 +76,13 @@ public class KipRepository extends Repository {
         WeightRepository.createTable(database);
         HeightRepository.createTable(database);
         VaccineRepository.createTable(database);
+
+        OpdVisitRepository.createTable(database);
+        OpdDetailsRepository.createTable(database);
+        OpdDiagnosisAndTreatmentFormRepository.createTable(database);
+        OpdDiagnosisDetailRepository.createTable(database);
+        OpdTreatmentDetailRepository.createTable(database);
+        OpdTestConductedRepository.createTable(database);
 
         ClientRegisterTypeRepository.createTable(database);
 
@@ -130,12 +144,16 @@ public class KipRepository extends Repository {
                 case 9:
                     upgradeToVersion9(db);
                     break;
+                case 10:
+                    ChildDbMigrations.addShowBcg2ReminderAndBcgScarColumnsToEcChildDetails(db);
+                    break;
 
                 default:
                     break;
             }
             upgradeTo++;
         }
+        ChildDbMigrations.addShowBcg2ReminderAndBcgScarColumnsToEcChildDetails(db);
 //
         DailyIndicatorCountRepository.performMigrations(db);
         IndicatorQueryRepository.performMigrations(db);
@@ -143,8 +161,8 @@ public class KipRepository extends Repository {
 
     @Override
     public SQLiteDatabase getReadableDatabase() {
-        String pass = KipApplication.getInstance().getPassword();
-        if (StringUtils.isNotBlank(pass)) {
+        byte[] pass = KipApplication.getInstance().getPassword();
+        if (pass != null && pass.length > 0) {
             return getReadableDatabase(pass);
         } else {
             throw new IllegalStateException("Password is blank");
@@ -153,8 +171,8 @@ public class KipRepository extends Repository {
 
     @Override
     public SQLiteDatabase getWritableDatabase() {
-        String pass = KipApplication.getInstance().getPassword();
-        if (StringUtils.isNotBlank(pass)) {
+        byte[] pass = KipApplication.getInstance().getPassword();
+        if (pass != null && pass.length > 0) {
             return getWritableDatabase(pass);
         } else {
             throw new IllegalStateException("Password is blank");

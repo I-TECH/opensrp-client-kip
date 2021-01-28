@@ -2,8 +2,9 @@ package org.smartregister.kip.service.intent;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import org.json.JSONObject;
 import org.smartregister.kip.context.AllSettings;

@@ -24,6 +24,6 @@ public class ChildFormInteractor extends JsonFormInteractor {
         super.registerWidgets();
         map.put(JsonFormConstants.EDIT_TEXT, new ChildEditTextFactory());
         map.put(JsonFormConstants.DATE_PICKER, new AdverseEffectDatePickerFactory());
-        map.put(JsonFormConstants.SPINNER, new KipSpinnerFactory());
+//        map.put(JsonFormConstants.SPINNER, new KipSpinnerFactory());
     }
 }

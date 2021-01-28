@@ -5,20 +5,22 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
+import com.vijay.jsonwizard.constants.JsonFormConstants;
+
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.vijay.jsonwizard.constants.JsonFormConstants;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -26,14 +28,12 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.smartregister.child.util.JsonFormUtils;
 import org.smartregister.domain.Response;
 import org.smartregister.kip.R;
 import org.smartregister.kip.adapter.ReportsSectionsPagerAdapter;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.domain.MonthlyTally;
 import org.smartregister.kip.domain.ReportHia2Indicator;
-import org.smartregister.kip.fragment.CustomDateRangeDialogFragment;
 import org.smartregister.kip.fragment.DraftMonthlyFragment;
 import org.smartregister.kip.fragment.SendMonthlyDraftDialogFragment;
 import org.smartregister.kip.model.ReportGroupingModel;
@@ -43,13 +43,13 @@ import org.smartregister.kip.task.StartDraftMonthlyFormTask;
 import org.smartregister.kip.util.AppExecutors;
 import org.smartregister.kip.util.KipConstants;
 import org.smartregister.kip.util.KipReportUtils;
-import org.smartregister.kip.view.NavigationMenu;
 import org.smartregister.reporting.domain.TallyStatus;
 import org.smartregister.reporting.event.IndicatorTallyEvent;
 import org.smartregister.reporting.util.ViewUtils;
 import org.smartregister.reporting.view.ReportingProcessingSnackbar;
 import org.smartregister.repository.Hia2ReportRepository;
 import org.smartregister.service.HTTPAgent;
+import org.smartregister.util.JsonFormUtils;
 import org.smartregister.util.Utils;
 
 import java.text.DateFormat;
@@ -86,12 +86,12 @@ public class HIA2ReportsActivity extends AppCompatActivity {
 
 
     /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
+     * The {@link PagerAdapter} that will provide
      * fragments for each of the sections. We use a
      * {@link FragmentPagerAdapter} derivative, which will keep every
      * loaded fragment in memory. If this becomes too memory intensive, it
      * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+     * {@link FragmentStatePagerAdapter}.
      */
     private ReportsSectionsPagerAdapter mSectionsPagerAdapter;
 

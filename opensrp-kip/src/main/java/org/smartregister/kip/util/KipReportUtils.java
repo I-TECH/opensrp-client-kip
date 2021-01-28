@@ -1,11 +1,11 @@
 package org.smartregister.kip.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.joda.time.DateTime;
 import org.json.JSONObject;
 import org.smartregister.child.util.Constants;
-import org.smartregister.child.util.JsonFormUtils;
+import org.smartregister.child.util.ChildJsonFormUtils;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.domain.Report;
 import org.smartregister.kip.domain.ReportHia2Indicator;
@@ -27,7 +27,7 @@ public class KipReportUtils {
             String providerId = KipApplication.getInstance().context().allSharedPreferences().fetchRegisteredANM();
             String locationId = KipApplication.getInstance().context().allSharedPreferences().getPreference(Constants.CURRENT_LOCATION_ID);
             Report report = new Report();
-            report.setFormSubmissionId(JsonFormUtils.generateRandomUUIDString());
+            report.setFormSubmissionId(ChildJsonFormUtils.generateRandomUUIDString());
             report.setHia2Indicators(hia2Indicators);
             report.setLocationId(locationId);
             report.setProviderId(providerId);
@@ -39,7 +39,7 @@ public class KipReportUtils {
 
             report.setReportDate(new DateTime(calendar.getTime()));
             report.setReportType(reportType);
-            JSONObject reportJson = new JSONObject(JsonFormUtils.gson.toJson(report));
+            JSONObject reportJson = new JSONObject(ChildJsonFormUtils.gson.toJson(report));
             try {
                 KipApplication.getInstance().hia2ReportRepository().addReport(reportJson);
             } catch (Exception e) {

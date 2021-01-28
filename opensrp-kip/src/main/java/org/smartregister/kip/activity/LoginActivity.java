@@ -2,29 +2,18 @@ package org.smartregister.kip.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Base64;
 
 import com.google.gson.Gson;
 
-import org.apache.commons.io.IOUtils;
 import org.smartregister.domain.LoginResponse;
-import org.smartregister.domain.jsonmapping.LoginResponseData;
-import org.smartregister.domain.jsonmapping.util.LocationTree;
 import org.smartregister.kip.R;
 import org.smartregister.kip.presenter.LoginPresenter;
-import org.smartregister.kip.service.intent.LocationsIntentService;
+//import org.smartregister.kip.service.intent.LocationsIntentService;
 import org.smartregister.kip.util.KipChildUtils;
 import org.smartregister.kip.util.KipConstants;
-import org.smartregister.sync.helper.LocationServiceHelper;
 import org.smartregister.task.SaveTeamLocationsTask;
 import org.smartregister.view.activity.BaseLoginActivity;
 import org.smartregister.view.contract.BaseLoginContract;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-
-import timber.log.Timber;
 
 import static org.smartregister.domain.LoginResponse.SUCCESS;
 
@@ -65,9 +54,9 @@ public class LoginActivity extends BaseLoginActivity implements BaseLoginContrac
 
         Intent intent = new Intent(this, ChildRegisterActivity.class);
         intent.putExtra(KipConstants.IntentKeyUtil.IS_REMOTE_LOGIN, remote);
-        Intent rIntent = new Intent(this, LocationsIntentService.class);
-        rIntent.putExtra("userInfo", jsonPayload);
-        startService(rIntent);
+//        Intent rIntent = new Intent(this, LocationsIntentService.class);
+//        rIntent.putExtra("userInfo", jsonPayload);
+//        startService(rIntent);
         startActivity(intent);
         finish();
     }

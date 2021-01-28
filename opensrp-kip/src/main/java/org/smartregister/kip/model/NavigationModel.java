@@ -31,6 +31,20 @@ public class NavigationModel implements NavigationContract.Model {
             if (childNavigationOption.isEnabled()) {
                 navigationOptions.add(childNavigationOption);
             }
+
+            NavigationOption allClientsOption = new NavigationOption(R.mipmap.sidemenu_families
+                    , R.mipmap.sidemenu_families_active, R.string.all_clients, KipConstants.DrawerMenu.ALL_CLIENTS, 0, true);
+
+            if (allClientsOption.isEnabled()) {
+                navigationOptions.add(allClientsOption);
+            }
+
+            NavigationOption opdNavigationOption = new NavigationOption(R.mipmap.sidemenu_families,
+                    R.mipmap.sidemenu_families_active, R.string.menu_opd_clients, KipConstants.DrawerMenu.OPD_CLIENTS,
+                    0, true);
+            if (opdNavigationOption.isEnabled()) {
+                navigationOptions.add(opdNavigationOption);
+            }
         }
 
         return navigationOptions;

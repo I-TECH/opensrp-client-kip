@@ -4,14 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.design.bottomnavigation.LabelVisibilityMode;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.vijay.jsonwizard.constants.JsonFormConstants;
 import com.vijay.jsonwizard.domain.Form;
 
@@ -25,8 +23,8 @@ import org.smartregister.child.ChildLibrary;
 import org.smartregister.child.activity.BaseChildRegisterActivity;
 import org.smartregister.child.model.BaseChildRegisterModel;
 import org.smartregister.child.presenter.BaseChildRegisterPresenter;
+import org.smartregister.child.util.ChildJsonFormUtils;
 import org.smartregister.child.util.Constants;
-import org.smartregister.child.util.JsonFormUtils;
 import org.smartregister.child.util.Utils;
 import org.smartregister.helper.BottomNavigationHelper;
 import org.smartregister.kip.R;
@@ -35,10 +33,8 @@ import org.smartregister.kip.event.LoginEvent;
 import org.smartregister.kip.fragment.AdvancedSearchFragment;
 import org.smartregister.kip.fragment.ChildRegisterFragment;
 import org.smartregister.kip.fragment.MeFragment;
-import org.smartregister.kip.presenter.ChildRegisterPresenter;
 import org.smartregister.kip.util.KipChildUtils;
 import org.smartregister.kip.util.KipConstants;
-import org.smartregister.kip.util.KipJsonFormUtils;
 import org.smartregister.kip.util.KipLocationUtility;
 import org.smartregister.kip.view.NavDrawerActivity;
 import org.smartregister.kip.view.NavigationMenu;
@@ -65,6 +61,11 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //check if from opd
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null && bundle.getBoolean("from_opd", false)) {
+            startRegistration();
+        }
     }
 
     @Override
@@ -177,15 +178,13 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
     protected void onResumption() {
         super.onResumption();
         createDrawer();
-        initializeCustomNavbarLIsteners();
     }
 
     private void createDrawer() {
-        navigationMenu = NavigationMenu.getInstance(this, null, null);
-        if (navigationMenu != null) {
-            navigationMenu.getNavigationAdapter().setSelectedView(KipConstants.DrawerMenu.CHILD_CLIENTS);
-            navigationMenu.runRegisterCount();
-        }
+        WeakReference<ChildRegisterActivity> childRegisterActivityWeakReference = new WeakReference<>(this);
+        navigationMenu = NavigationMenu.getInstance(childRegisterActivityWeakReference.get(), null, null);
+        navigationMenu.getNavigationAdapter().setSelectedView(KipConstants.DrawerMenu.CHILD_CLIENTS);
+        navigationMenu.runRegisterCount();
     }
 
     @Override
@@ -222,7 +221,7 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
         }
         intent.putExtra(Constants.INTENT_KEY.JSON, jsonForm.toString());
         intent.putExtra(JsonFormConstants.JSON_FORM_KEY.FORM, getForm());
-        startActivityForResult(intent, JsonFormUtils.REQUEST_CODE_GET_JSON);
+        startActivityForResult(intent, ChildJsonFormUtils.REQUEST_CODE_GET_JSON);
     }
 
     public void finishActivity() {
@@ -242,19 +241,4 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
             NavigationMenu.closeDrawer();
         }
     }
-
-
-    private void initializeCustomNavbarLIsteners() {
-        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-
-        LinearLayout outofcatchment = (LinearLayout) drawer.findViewById(R.id.nav_record_vaccination_out_catchment);
-        outofcatchment.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startFormActivity("out_of_catchment_service", null, null);
-                drawer.closeDrawer(GravityCompat.START);
-
-            }
-        });
-}
 }

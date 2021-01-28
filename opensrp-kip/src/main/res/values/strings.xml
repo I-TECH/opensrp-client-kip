@@ -14,6 +14,8 @@
     <string name="side_nav_add">Add new child</string>
     <string name="scan_card">Card Scanner</string>
     <string name="side_nav_out_of_catchment">Record out of catchment vaccination</string>
+
+    <string name="out_of_catchment">Record out of catchment vaccination</string>
     <string name="nav_register">Register</string>
     <string name="attribution_text">Powered by OpenSRP</string>
     <string name="show_password_text">Show password</string>
@@ -566,6 +568,11 @@
     <string name="summary_forms">Other Forms</string>
 
     <string name="kip_id">KIP ID</string>
+
+    <string name="opd_register_other_clients">Register Other Clients</string>
+    <string name="opd_register_child_under_5">Register Child Under 5</string>
+    <string name="menu_opd_clients">OPD Clients</string>
+    <string name="opd_close">OPD CLOSE</string>
 
 
 </resources>

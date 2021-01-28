@@ -3,10 +3,11 @@ package org.smartregister.kip.application;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.support.annotation.VisibleForTesting;
-import android.support.v7.app.AppCompatDelegate;
 import android.util.DisplayMetrics;
 import android.util.Pair;
+
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
@@ -34,13 +35,19 @@ import org.smartregister.immunization.domain.jsonmapping.VaccineGroup;
 import org.smartregister.immunization.repository.RecurringServiceRecordRepository;
 import org.smartregister.immunization.repository.RecurringServiceTypeRepository;
 import org.smartregister.immunization.repository.VaccineRepository;
+import org.smartregister.immunization.util.IMConstants;
 import org.smartregister.immunization.util.VaccinateActionUtils;
 import org.smartregister.immunization.util.VaccinatorUtils;
 import org.smartregister.kip.BuildConfig;
 import org.smartregister.kip.activity.ChildFormActivity;
 import org.smartregister.kip.activity.ChildImmunizationActivity;
 import org.smartregister.kip.activity.ChildProfileActivity;
+import org.smartregister.kip.activity.ChildRegisterActivity;
+import org.smartregister.kip.activity.OpdFormActivity;
+import org.smartregister.kip.activity.KipOpdProfileActivity;
 import org.smartregister.kip.activity.LoginActivity;
+import org.smartregister.kip.configuration.OpdRegisterQueryProvider;
+import org.smartregister.kip.configuration.KipOpdRegisterRowOptions;
 import org.smartregister.kip.job.KipJobCreator;
 import org.smartregister.kip.processor.KipProcessorForJava;
 import org.smartregister.kip.processor.TripleResultProcessor;
@@ -54,8 +61,14 @@ import org.smartregister.kip.repository.KipRepository;
 import org.smartregister.kip.repository.MonthlyTalliesRepository;
 import org.smartregister.kip.util.KipChildUtils;
 import org.smartregister.kip.util.KipConstants;
+import org.smartregister.kip.util.KipOpdRegisterProviderMetadata;
 import org.smartregister.kip.util.VaccineDuplicate;
 import org.smartregister.location.helper.LocationHelper;
+import org.smartregister.opd.OpdLibrary;
+import org.smartregister.opd.configuration.OpdConfiguration;
+import org.smartregister.opd.pojo.OpdMetadata;
+import org.smartregister.opd.utils.OpdConstants;
+import org.smartregister.opd.utils.OpdDbConstants;
 import org.smartregister.receiver.SyncStatusBroadcastReceiver;
 import org.smartregister.reporting.ReportingLibrary;
 import org.smartregister.repository.EventClientRepository;
@@ -69,7 +82,9 @@ import org.smartregister.view.receiver.TimeChangedBroadcastReceiver;
 import org.smartregister.kip.util.AppExecutors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -124,32 +139,35 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
             return new String[]{DBConstants.KEY.ZEIR_ID, DBConstants.KEY.FIRST_NAME, DBConstants.KEY.LAST_NAME};
         } else if (tableName.equals(DBConstants.RegisterTable.CHILD_DETAILS)) {
             return new String[]{DBConstants.KEY.LOST_TO_FOLLOW_UP, DBConstants.KEY.INACTIVE};
-        } else if (tableName.equals(DBConstants.RegisterTable.MOTHER_DETAILS)) {
-            return new String[]{DBConstants.KEY.EPI_CARD_NUMBER};
         }
         return null;
     }
 
     private static String[] getFtsSortFields(String tableName, android.content.Context context) {
-        if (tableName.equals(DBConstants.RegisterTable.CHILD_DETAILS)) {
+        if (tableName.equals(KipConstants.TABLE_NAME.ALL_CLIENTS)) {
+            List<String> names = new ArrayList<>();
+            names.add(KipConstants.KEY.FIRST_NAME);
+            names.add(OpdDbConstants.KEY.LAST_NAME);
+            names.add(KipConstants.KEY.DOB);
+            names.add(KipConstants.KEY.ZEIR_ID);
+            names.add(KipConstants.KEY.LAST_INTERACTED_WITH);
+            names.add(KipConstants.KEY.DOD);
+            names.add(KipConstants.KEY.DATE_REMOVED);
+            return names.toArray(new String[0]);
+        } else if (tableName.equals(DBConstants.RegisterTable.CHILD_DETAILS)) {
             List<VaccineGroup> vaccineList = VaccinatorUtils.getVaccineGroupsFromVaccineConfigFile(context, VaccinatorUtils.vaccines_file);
             List<String> names = new ArrayList<>();
+            names.add(DBConstants.KEY.INACTIVE);
+            names.add("relational_id");
+            names.add(DBConstants.KEY.LOST_TO_FOLLOW_UP);
+
             for (VaccineGroup vaccineGroup : vaccineList) {
                 populateAlertColumnNames(vaccineGroup.vaccines, names);
             }
 
-            return names.toArray(new String[names.size()]);
-
-        } else if (tableName.equals(DBConstants.RegisterTable.CLIENT)) {
-            List<String> names = new ArrayList<>();
-            names.add(DBConstants.KEY.FIRST_NAME);
-            names.add(DBConstants.KEY.DOB);
-            names.add(DBConstants.KEY.ZEIR_ID);
-            names.add(DBConstants.KEY.LAST_INTERACTED_WITH);
-            names.add(DBConstants.KEY.DOD);
-            names.add(DBConstants.KEY.DATE_REMOVED);
-            return names.toArray(new String[names.size()]);
+            return names.toArray(new String[0]);
         }
+
         return null;
     }
 
@@ -245,6 +263,8 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
         ReportingLibrary.init(context, getRepository(), null, BuildConfig.VERSION_CODE, BuildConfig.DATABASE_VERSION);
         ReportingLibrary.getInstance().addMultiResultProcessor(new TripleResultProcessor());
 
+        setupOpdLibrary();
+
         Fabric.with(this, new Crashlytics.Builder().core(new CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build()).build());
 
         initRepositories();
@@ -258,6 +278,24 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
         JobManager.create(this).addJobCreator(new KipJobCreator());
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
 
+    }
+
+    private void setupOpdLibrary() {
+        OpdMetadata opdMetadata = new OpdMetadata(OpdConstants.JSON_FORM_KEY.NAME, OpdDbConstants.KEY.TABLE,
+                OpdConstants.EventType.OPD_REGISTRATION, OpdConstants.EventType.UPDATE_OPD_REGISTRATION,
+                OpdConstants.CONFIG, OpdFormActivity.class, KipOpdProfileActivity.class, true);
+
+        opdMetadata.setFieldsWithLocationHierarchy(new HashSet<>(Arrays.asList("village")));
+
+        opdMetadata.setLookUpQueryForOpdClient(String.format("select id as _id, %s, %s, %s, %s, %s, %s, %s, national_id from " + OpdDbConstants.KEY.TABLE + " where [condition] ", OpdConstants.KEY.RELATIONALID, OpdConstants.KEY.FIRST_NAME,
+                OpdConstants.KEY.LAST_NAME, OpdConstants.KEY.GENDER, OpdConstants.KEY.DOB, OpdConstants.KEY.BASE_ENTITY_ID, OpdDbConstants.KEY.OPENSRP_ID));
+        OpdConfiguration opdConfiguration = new OpdConfiguration.Builder(OpdRegisterQueryProvider.class)
+                .setOpdMetadata(opdMetadata)
+                .setOpdRegisterProviderMetadata(KipOpdRegisterProviderMetadata.class)
+                .setOpdRegisterRowOptions(KipOpdRegisterRowOptions.class)
+                .build();
+
+        OpdLibrary.init(context, getRepository(), opdConfiguration, BuildConfig.VERSION_CODE, BuildConfig.DATABASE_VERSION);
     }
 
     @Override
@@ -284,13 +322,13 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
         return repository;
     }
 
-    public String getPassword() {
-        if (password == null) {
-            String username = getContext().userService().getAllSharedPreferences().fetchRegisteredANM();
-            password = getContext().userService().getGroupId(username);
-        }
-        return password;
-    }
+//    public String getPassword() {
+//        if (password == null) {
+//            String username = getContext().userService().getAllSharedPreferences().fetchRegisteredANM();
+//            password = getContext().userService().getGroupId(username);
+//        }
+//        return password;
+//    }
 
     public Context getContext() {
         return context;
@@ -322,7 +360,7 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
 
     private ChildMetadata getMetadata() {
         ChildMetadata metadata = new ChildMetadata(ChildFormActivity.class, ChildProfileActivity.class,
-                ChildImmunizationActivity.class, true, new KipChildRegisterQueryProvider());
+                ChildImmunizationActivity.class, ChildRegisterActivity.class, true, new KipChildRegisterQueryProvider());
         metadata.updateChildRegister(KipConstants.JSON_FORM.CHILD_ENROLLMENT, KipConstants.TABLE_NAME.ALL_CLIENTS,
                 KipConstants.TABLE_NAME.ALL_CLIENTS, KipConstants.EventType.CHILD_REGISTRATION,
                 KipConstants.EventType.UPDATE_CHILD_REGISTRATION, KipConstants.EventType.OUT_OF_CATCHMENT_SERVICE, KipConstants.CONFIGURATION.CHILD_REGISTER,
@@ -375,16 +413,17 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
     public HeightZScoreRepository heightZScoreRepository() {
         return GrowthMonitoringLibrary.getInstance().heightZScoreRepository();
     }
-
     @Override
     public void onTimeChanged() {
-        context.userService().forceRemoteLogin();
+        String username = getContext().userService().getAllSharedPreferences().fetchRegisteredANM();
+        context.userService().forceRemoteLogin(username);
         logoutCurrentUser();
     }
 
     @Override
     public void onTimeZoneChanged() {
-        context.userService().forceRemoteLogin();
+        String username = getContext().userService().getAllSharedPreferences().fetchRegisteredANM();
+        context.userService().forceRemoteLogin(username);
         logoutCurrentUser();
     }
 
@@ -424,7 +463,7 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
 
     @VisibleForTesting
     protected void fixHardcodedVaccineConfiguration() {
-        VaccineRepo.Vaccine[] vaccines = ImmunizationLibrary.getInstance().getVaccines();
+        VaccineRepo.Vaccine[] vaccines = ImmunizationLibrary.getInstance().getVaccines(IMConstants.VACCINE_TYPE.CHILD);
 
         HashMap<String, VaccineDuplicate> replacementVaccines = new HashMap<>();
         replacementVaccines.put("MR 2", new VaccineDuplicate("MR 2", VaccineRepo.Vaccine.mr1, -1, 548, 183, "child"));
@@ -442,7 +481,7 @@ public class KipApplication extends DrishtiApplication implements TimeChangedBro
             }
         }
 
-        ImmunizationLibrary.getInstance().setVaccines(vaccines);
+        ImmunizationLibrary.getInstance().setVaccines(vaccines, IMConstants.VACCINE_TYPE.CHILD);
     }
 
     public DailyTalliesRepository dailyTalliesRepository() {
