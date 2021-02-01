@@ -1,9 +1,8 @@
 package org.smartregister.kip.task;
 
 import android.os.AsyncTask;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.domain.MonthlyTally;

@@ -2,7 +2,7 @@ package org.smartregister.kip.repository;
 
 import android.database.Cursor;
 import android.database.SQLException;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.smartregister.reporting.util.Constants;
@@ -123,6 +123,6 @@ public class DailyTalliesRepository extends BaseRepository {
         return COLUMN_DAY + " >= " + String.valueOf(startDate.getTime()) +
                 " AND " + COLUMN_DAY + " <= " + String.valueOf(endDate.getTime());
     }
-    
+
 
 }

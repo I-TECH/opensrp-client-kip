@@ -19,8 +19,7 @@ package org.smartregister.kip.util;
 
 import android.os.Handler;
 import android.os.Looper;
-
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

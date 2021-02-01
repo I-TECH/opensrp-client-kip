@@ -2,26 +2,23 @@ package org.smartregister.kip.fragment;
 
 import android.os.Bundle;
 import android.os.Handler;
-
+import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-
-import com.google.android.material.snackbar.Snackbar;
 import com.rengwuxian.materialedittext.MaterialEditText;
-import com.vijay.jsonwizard.customviews.MaterialSpinner;
 import com.vijay.jsonwizard.fragments.JsonFormFragment;
+import com.vijay.jsonwizard.interactors.JsonFormInteractor;
 import com.vijay.jsonwizard.presenters.JsonFormFragmentPresenter;
 import com.vijay.jsonwizard.utils.FormUtils;
 import com.vijay.jsonwizard.viewstates.JsonFormFragmentViewState;
@@ -29,7 +26,6 @@ import com.vijay.jsonwizard.widgets.DatePickerFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.smartregister.Context;
-import org.smartregister.child.interactor.ChildFormInteractor;
 import org.smartregister.child.provider.MotherLookUpSmartClientsProvider;
 import org.smartregister.child.util.MotherLookUpUtils;
 import org.smartregister.commonregistry.CommonPersonObject;
@@ -38,7 +34,6 @@ import org.smartregister.event.Listener;
 import org.smartregister.kip.R;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.util.KipConstants;
-import org.smartregister.kip.util.KipMotherLookUpUtils;
 import org.smartregister.util.Utils;
 
 import java.util.ArrayList;
@@ -80,7 +75,7 @@ public class KipJsonFormFragment extends JsonFormFragment {
 
     @Override
     protected JsonFormFragmentPresenter createPresenter() {
-        return new JsonFormFragmentPresenter(this, ChildFormInteractor.getChildInteractorInstance());
+        return new JsonFormFragmentPresenter(this, JsonFormInteractor.getInstance());
     }
 
     public Context context() {
@@ -172,7 +167,7 @@ public class KipJsonFormFragment extends JsonFormFragment {
                         MaterialEditText materialEditText = (MaterialEditText) view;
                         materialEditText.setEnabled(true);
                         enableEditText(materialEditText);
-                        materialEditText.setTag(com.vijay.jsonwizard.R.id.after_look_up, false);
+                        materialEditText.setTag(R.id.after_look_up, false);
                         materialEditText.setText("");
                     }
                 }
@@ -228,12 +223,12 @@ public class KipJsonFormFragment extends JsonFormFragment {
         snackbarView.setMinimumHeight(Float.valueOf(textSize).intValue());
         snackbarView.setBackgroundResource(R.color.snackbar_background_yellow);
 
-        final Button actionView = snackbarView.findViewById(R.id.snackbar_action);
+        final Button actionView = snackbarView.findViewById(android.support.design.R.id.snackbar_action);
         actionView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         actionView.setGravity(Gravity.CENTER);
         actionView.setTextColor(getResources().getColor(R.color.text_black));
 
-        TextView textView = snackbarView.findViewById(R.id.snackbar_text);
+        TextView textView = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         textView.setGravity(Gravity.CENTER);
         textView.setOnClickListener(new View.OnClickListener() {
@@ -284,7 +279,7 @@ public class KipJsonFormFragment extends JsonFormFragment {
 
                     for (View view : lookUpViews) {
 
-                        String key = (String) view.getTag(com.vijay.jsonwizard.R.id.key);
+                        String key = (String) view.getTag(R.id.key);
                         String text = "";
 
                         if (StringUtils.containsIgnoreCase(key, MotherLookUpUtils.firstName)) {
@@ -307,41 +302,13 @@ public class KipJsonFormFragment extends JsonFormFragment {
                             }
                         }
 
-                        if (StringUtils.containsIgnoreCase(key, KipMotherLookUpUtils.ce_county)) {
-                            text = getValue(pc.getColumnmaps(), KipMotherLookUpUtils.county, true);
-                        }
-
-                        if (StringUtils.containsIgnoreCase(key, KipMotherLookUpUtils.ce_subCounty)) {
-                            text = getValue(pc.getColumnmaps(), KipMotherLookUpUtils.subCounty, true);
-                        }
-
-                        if (StringUtils.containsIgnoreCase(key, KipMotherLookUpUtils.ce_ward)) {
-                            text = getValue(pc.getColumnmaps(), KipMotherLookUpUtils.ward, true);
-                        }
-
                         if (view instanceof MaterialEditText) {
                             MaterialEditText materialEditText = (MaterialEditText) view;
                             materialEditText.setEnabled(false);
-                            materialEditText.setTag(com.vijay.jsonwizard.R.id.after_look_up, true);
+                            materialEditText.setTag(R.id.after_look_up, true);
                             materialEditText.setText(text);
                             materialEditText.setInputType(InputType.TYPE_NULL);
                             disableEditText(materialEditText);
-                        }
-
-                        else if (view instanceof MaterialSpinner) {
-                            MaterialSpinner materialSpinner = (MaterialSpinner) view;
-                            materialSpinner.setTag(com.vijay.jsonwizard.R.id.after_look_up, true);
-                            materialSpinner.setTag(R.id.location_selected_value, text);
-                            if (StringUtils.isNotBlank(materialSpinner.getTag(R.id.key).toString())
-                                    && materialSpinner.getTag(R.id.key).toString().equalsIgnoreCase(KipMotherLookUpUtils.ce_county)) {
-                                Adapter adapter = materialSpinner.getAdapter();
-                                for (int n = 0; n < adapter.getCount(); n++) {
-                                    String s = (String) adapter.getItem(n);
-                                    if (s.equalsIgnoreCase(text)) {
-                                        materialSpinner.setSelection(n + 1);
-                                    }
-                                }
-                            }
                         }
                     }
 
@@ -383,5 +350,4 @@ public class KipJsonFormFragment extends JsonFormFragment {
             }
         }
     };
-
 }

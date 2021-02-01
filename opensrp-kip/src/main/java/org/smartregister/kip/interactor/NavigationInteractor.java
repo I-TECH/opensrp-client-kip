@@ -63,8 +63,7 @@ public class NavigationInteractor implements NavigationContract.Interactor {
         int count = 0;
         Cursor cursor = null;
         if (KipConstants.RegisterType.ALL_CLIENTS.equals(registerType)) {
-            registerType = "'" + KipConstants.RegisterType.OPD + "',"
-                    + "'" + KipConstants.RegisterType.CHILD + "',";
+            registerType = "'" + KipConstants.RegisterType.OPD + "'," + "'" + KipConstants.RegisterType.CHILD + "'";
         } else {
             registerType = "'" + registerType + "'";
         }

@@ -2,8 +2,8 @@ package org.smartregister.kip.configuration;
 
 import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.smartregister.cursoradapter.SmartRegisterQueryBuilder;
 import org.smartregister.opd.OpdLibrary;

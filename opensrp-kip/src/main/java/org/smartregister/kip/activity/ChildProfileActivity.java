@@ -1,8 +1,7 @@
 package org.smartregister.kip.activity;
 
 import android.os.Bundle;
-
-import androidx.viewpager.widget.ViewPager;
+import android.support.v4.view.ViewPager;
 
 import org.smartregister.child.util.Utils;
 import org.smartregister.kip.util.KipChildUtils;
@@ -36,7 +35,6 @@ public class ChildProfileActivity extends BaseProfileActivity {
     protected ViewPager setupViewPager(ViewPager viewPager) {
         return null;
     }
-
 
     @Override
     protected void fetchProfileData() {

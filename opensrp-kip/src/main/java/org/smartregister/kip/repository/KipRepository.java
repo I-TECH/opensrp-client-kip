@@ -1,7 +1,7 @@
 package org.smartregister.kip.repository;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import net.sqlcipher.database.SQLiteDatabase;
 
@@ -161,8 +161,8 @@ public class KipRepository extends Repository {
 
     @Override
     public SQLiteDatabase getReadableDatabase() {
-        byte[] pass = KipApplication.getInstance().getPassword();
-        if (pass != null && pass.length > 0) {
+        String pass = KipApplication.getInstance().getPassword();
+        if (StringUtils.isNotBlank(pass)) {
             return getReadableDatabase(pass);
         } else {
             throw new IllegalStateException("Password is blank");
@@ -171,8 +171,8 @@ public class KipRepository extends Repository {
 
     @Override
     public SQLiteDatabase getWritableDatabase() {
-        byte[] pass = KipApplication.getInstance().getPassword();
-        if (pass != null && pass.length > 0) {
+        String pass = KipApplication.getInstance().getPassword();
+        if (StringUtils.isNotBlank(pass)) {
             return getWritableDatabase(pass);
         } else {
             throw new IllegalStateException("Password is blank");

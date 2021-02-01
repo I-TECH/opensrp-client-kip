@@ -1,6 +1,5 @@
 package org.smartregister.kip.interactor;
-
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;

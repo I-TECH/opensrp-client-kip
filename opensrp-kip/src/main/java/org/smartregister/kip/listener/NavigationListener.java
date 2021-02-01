@@ -2,9 +2,8 @@ package org.smartregister.kip.listener;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.view.View;
-
-import androidx.annotation.NonNull;
 
 import org.smartregister.kip.activity.AllClientsRegisterActivity;
 import org.smartregister.kip.activity.ChildRegisterActivity;
@@ -61,4 +60,3 @@ public class NavigationListener implements View.OnClickListener {
         activity.startActivity(new Intent(activity, clas));
     }
 }
-

@@ -1,9 +1,8 @@
 package org.smartregister.kip.model;
 
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.smartregister.kip.R;
 
@@ -16,7 +15,7 @@ public class ReportGroupingModel {
 
     private ArrayList<ReportGrouping> groupings = new ArrayList<>();
     private Context context;
-    
+
     public ReportGroupingModel(@NonNull Context context) {
         this.context = context;
     }

@@ -2,8 +2,7 @@ package org.smartregister.kip.util;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-
-import androidx.collection.LruCache;
+import android.support.v4.util.LruCache;
 
 import com.android.volley.Cache;
 import com.android.volley.Network;

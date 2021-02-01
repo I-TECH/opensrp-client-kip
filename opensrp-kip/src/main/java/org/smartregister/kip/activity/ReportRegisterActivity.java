@@ -2,7 +2,7 @@ package org.smartregister.kip.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.core.view.GravityCompat;
+import android.support.v4.view.GravityCompat;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -17,7 +17,6 @@ import org.smartregister.kip.util.KipConstants;
 import org.smartregister.kip.view.NavigationMenu;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class ReportRegisterActivity extends BaseActivity {
 
@@ -82,8 +81,8 @@ public class ReportRegisterActivity extends BaseActivity {
     }
 
     @Override
-    public void onUniqueIdFetched(Triple<String, Map<String, String>, String> triple, String s) {
-
+    public void onUniqueIdFetched(Triple<String, String, String> triple, String s) {
+        // Nothing to happen here
     }
 
     @Override

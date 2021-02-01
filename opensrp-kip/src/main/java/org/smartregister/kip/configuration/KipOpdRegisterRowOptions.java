@@ -7,8 +7,8 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.smartregister.commonregistry.CommonPersonObjectClient;
 import org.smartregister.kip.R;

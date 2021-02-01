@@ -2,9 +2,8 @@ package org.smartregister.kip.processor;
 
 import android.content.ContentValues;
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
+import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -13,14 +12,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.smartregister.child.util.ChildDbUtils;
-import org.smartregister.child.util.ChildJsonFormUtils;
 import org.smartregister.child.util.Constants;
+import org.smartregister.child.util.JsonFormUtils;
 import org.smartregister.child.util.MoveToMyCatchmentUtils;
 import org.smartregister.child.util.Utils;
 import org.smartregister.clientandeventmodel.DateUtil;
 import org.smartregister.commonregistry.AllCommonsRepository;
-import org.smartregister.domain.Client;
-import org.smartregister.domain.Event;
+import org.smartregister.domain.db.Client;
+import org.smartregister.domain.db.Event;
 import org.smartregister.domain.db.EventClient;
 import org.smartregister.domain.jsonmapping.ClientClassification;
 import org.smartregister.domain.jsonmapping.ClientField;
@@ -42,14 +41,12 @@ import org.smartregister.immunization.repository.RecurringServiceTypeRepository;
 import org.smartregister.immunization.repository.VaccineRepository;
 import org.smartregister.immunization.service.intent.RecurringIntentService;
 import org.smartregister.immunization.service.intent.VaccineIntentService;
-import org.smartregister.immunization.util.JsonFormUtils;
 import org.smartregister.kip.activity.ChildImmunizationActivity;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.util.AppExecutors;
 import org.smartregister.kip.util.KipChildUtils;
 import org.smartregister.kip.util.KipConstants;
 import org.smartregister.opd.processor.OpdMiniClientProcessorForJava;
-import org.smartregister.opd.utils.ConstantsUtils;
 import org.smartregister.opd.utils.OpdConstants;
 import org.smartregister.repository.DetailsRepository;
 import org.smartregister.repository.EventClientRepository;
@@ -140,7 +137,7 @@ public class KipProcessorForJava extends ClientProcessorForJava {
                         continue;
                     }
                     processService(eventClient, serviceTable);
-                } else if (eventType.equals(ChildJsonFormUtils.BCG_SCAR_EVENT)) {
+                } else if (eventType.equals(JsonFormUtils.BCG_SCAR_EVENT)) {
                     processBCGScarEvent(eventClient);
                 } else if (eventType.equals(MoveToMyCatchmentUtils.MOVE_TO_CATCHMENT_EVENT)) {
                     unsyncEvents.add(event);
