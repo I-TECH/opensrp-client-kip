@@ -54,7 +54,7 @@
         "openmrs_entity_parent": "",
         "openmrs_entity": "",
         "openmrs_entity_id": "",
-        "type": "barcode",
+        "type": "edit_text",
         "barcode_type": "qrcode",
         "hint": "KIP ID ",
         "scanButtonText": "Scan QR Code",
@@ -71,7 +71,7 @@
         "openmrs_entity": "encounter",
         "openmrs_entity_id": "encounter_date",
         "type": "date_picker",
-        "hint": "Service date *",
+        "hint": "Service date",
         "expanded": false,
         "max_date": "today",
         "v_required": {
