@@ -2,8 +2,8 @@ package org.smartregister.kip.processor;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -21,8 +21,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.smartregister.CoreLibrary;
 import org.smartregister.child.util.ChildDbUtils;
-import org.smartregister.child.util.Constants;
 import org.smartregister.child.util.JsonFormUtils;
+import org.smartregister.child.util.Constants;
 import org.smartregister.child.util.MoveToMyCatchmentUtils;
 import org.smartregister.child.util.Utils;
 import org.smartregister.clientandeventmodel.DateUtil;
@@ -77,6 +77,7 @@ import org.smartregister.opd.utils.OpdConstants;
 import org.smartregister.opd.utils.OpdDbConstants;
 import org.smartregister.opd.utils.OpdUtils;
 import org.smartregister.repository.EventClientRepository;
+import org.smartregister.sync.ClientProcessorForJava;
 import org.smartregister.sync.MiniClientProcessorForJava;
 
 import java.text.DateFormat;
@@ -93,7 +94,7 @@ import java.util.Map;
 
 import timber.log.Timber;
 
-public class KipProcessorForJava extends OpdMiniClientProcessorForJava implements MiniClientProcessorForJava {
+public class KipProcessorForJava extends ClientProcessorForJava implements MiniClientProcessorForJava {
 
     private static KipProcessorForJava instance;
 
@@ -670,6 +671,22 @@ public class KipProcessorForJava extends OpdMiniClientProcessorForJava implement
         }
 
         ChildDbUtils.updateChildDetailsValue(Constants.SHOW_BCG_SCAR, String.valueOf(date), baseEntityId);
+    }
+
+    @NonNull
+    @Override
+    public HashSet<String> getEventTypes() {
+        return null;
+    }
+
+    @Override
+    public boolean canProcess(@NonNull String s) {
+        return false;
+    }
+
+    @Override
+    public void processEventClient(@NonNull EventClient eventClient, @NonNull List<Event> list, @androidx.annotation.Nullable ClientClassification clientClassification) throws Exception {
+
     }
 
     @Override

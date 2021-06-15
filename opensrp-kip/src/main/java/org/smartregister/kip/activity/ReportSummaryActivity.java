@@ -2,8 +2,8 @@ package org.smartregister.kip.activity;
 
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -189,8 +189,8 @@ public class ReportSummaryActivity extends BaseActivity {
     }
 
     @Override
-    public void onUniqueIdFetched(Triple<String, String, String> triple, String entityId) {
-        // Nothing to do
+    public void onUniqueIdFetched(Triple<String, String, String> triple, String s) {
+
     }
 
     @Override

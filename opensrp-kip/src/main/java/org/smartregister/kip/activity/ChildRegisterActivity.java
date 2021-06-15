@@ -4,14 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.design.bottomnavigation.LabelVisibilityMode;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.vijay.jsonwizard.constants.JsonFormConstants;
 import com.vijay.jsonwizard.domain.Form;
 
@@ -180,7 +181,7 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
     protected void onResumption() {
         super.onResumption();
         createDrawer();
-        initializeCustomNavbarLIsteners();
+//        initializeCustomNavbarLIsteners();
     }
 
     private void createDrawer() {
@@ -246,17 +247,26 @@ public class ChildRegisterActivity extends BaseChildRegisterActivity implements 
     }
 
 
-    private void initializeCustomNavbarLIsteners() {
-        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-
-        LinearLayout outofcatchment = (LinearLayout) drawer.findViewById(R.id.nav_record_vaccination_out_catchment);
-        outofcatchment.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startFormActivity("out_of_catchment_service", null, null);
-                drawer.closeDrawer(GravityCompat.START);
-
-            }
-        });
-    }
+//    private void initializeCustomNavbarLIsteners() {
+//        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+//        LinearLayout stockregister = (LinearLayout) drawer.findViewById(R.id.stock_control);
+//        stockregister.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(getApplicationContext(), StockActivity.class);
+//                startActivity(intent);
+//                drawer.closeDrawer(GravityCompat.START);
+//
+//            }
+//        });
+//
+//        LinearLayout childRegister = (LinearLayout) drawer.findViewById(R.id.child_register);
+//        childRegister.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                drawer.closeDrawer(GravityCompat.START);
+//
+//            }
+//        });
+//    }
 }

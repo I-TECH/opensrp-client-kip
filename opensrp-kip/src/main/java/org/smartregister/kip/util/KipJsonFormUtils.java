@@ -3,7 +3,7 @@ package org.smartregister.kip.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -18,8 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.smartregister.child.ChildLibrary;
-import org.smartregister.child.util.Constants;
 import org.smartregister.child.util.JsonFormUtils;
+import org.smartregister.child.util.Constants;
 import org.smartregister.child.util.Utils;
 import org.smartregister.clientandeventmodel.Event;
 import org.smartregister.domain.Setting;

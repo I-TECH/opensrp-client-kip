@@ -3,15 +3,16 @@ package org.smartregister.kip.view;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +37,7 @@ import org.smartregister.domain.FetchStatus;
 import org.smartregister.kip.R;
 import org.smartregister.kip.activity.Covid19VaccineStockSettingsActivity;
 import org.smartregister.kip.activity.ReportRegisterActivity;
+import org.smartregister.kip.activity.KipStockActivity;
 import org.smartregister.kip.adapter.NavigationAdapter;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.contract.NavigationContract;
@@ -76,6 +78,7 @@ public class NavigationMenu implements NavigationContract.View, SyncStatusBroadc
     private TextView txtLocationSelected;
     private RelativeLayout covidStockUpdate;
     private LinearLayout outOfAreaMenu;
+    private LinearLayout stockControl;
 
     private View parentView;
     private LinearLayout reportView;
@@ -177,6 +180,7 @@ public class NavigationMenu implements NavigationContract.View, SyncStatusBroadc
         reportView = rootView.findViewById(R.id.report_view);
         covidStockUpdate = rootView.findViewById(R.id.covid19_vaccine_stock_section);
         outOfAreaMenu = rootView.findViewById(R.id.out_of_area_menu);
+        stockControl = rootView.findViewById(R.id.stock_control);
 
         ImageView ivLogo = rootView.findViewById(R.id.ivLogo);
         LinearLayout locationLayout = rootView.findViewById(R.id.giz_location_layout);
@@ -219,9 +223,26 @@ public class NavigationMenu implements NavigationContract.View, SyncStatusBroadc
         registerReporting(activity);
         registerCovid19UpdateActivity(activity);
         recordOutOfArea(activity);
+        recordStockControl(activity);
 
         // update all actions
         mPresenter.refreshLastSync();
+    }
+
+    private void recordStockControl(final Activity parentActivity){
+        stockControl.setOnClickListener(v -> startStockActivity(parentActivity));
+    }
+
+    private void startStockActivity(@Nullable Activity parentActivity) {
+        if (parentActivity instanceof KipStockActivity) {
+            drawer.closeDrawer(GravityCompat.START);
+            return;
+        }
+
+        if (parentActivity != null) {
+            Intent intent = new Intent(parentActivity, KipStockActivity.class);
+            parentActivity.startActivity(intent);
+        }
     }
 
     private void recordOutOfArea(final Activity parentActivity) {
