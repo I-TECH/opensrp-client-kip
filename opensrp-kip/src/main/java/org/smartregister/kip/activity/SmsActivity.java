@@ -20,7 +20,7 @@ import org.smartregister.kip.R;
 import org.smartregister.kip.adapter.SmsEnrollmentAdapter;
 import org.smartregister.kip.application.KipApplication;
 import org.smartregister.kip.model.SmsEnrollementModel;
-import org.smartregister.kip.pojo.SmsErolledClient;
+import org.smartregister.kip.pojo.SmsEnrolledClient;
 import org.smartregister.kip.repository.SmsEnrolledClientRepository;
 
 import java.util.ArrayList;
@@ -157,11 +157,11 @@ public class SmsActivity extends Activity {
 
     private List<String> getFullName(){
         List<String> list = new ArrayList<>();
-        SmsEnrolledClientRepository smsErolledClient = KipApplication.getInstance().smsEnrolledClientRepository();
-        List<SmsErolledClient> enrolledClients = smsErolledClient.getEnrolledClients();
+        SmsEnrolledClientRepository smsEnrolledClient = KipApplication.getInstance().smsEnrolledClientRepository();
+        List<SmsEnrolledClient> enrolledClients = smsEnrolledClient.getEnrolledClients();
         if (enrolledClients !=null){
-            for (SmsErolledClient erolledClient : enrolledClients){
-                list.add(erolledClient.getFirstName() + " " + erolledClient.getLastName() );
+            for (SmsEnrolledClient enrolledClient : enrolledClients){
+                list.add(enrolledClient.getFirstName() + " " + enrolledClient.getLastName() );
             }
         }
         return list;
@@ -169,11 +169,11 @@ public class SmsActivity extends Activity {
 
     public List<String> getPhoneNumber(){
         List<String> list = new ArrayList<>();
-        SmsEnrolledClientRepository smsErolledClient = KipApplication.getInstance().smsEnrolledClientRepository();
-        List<SmsErolledClient> enrolledClients = smsErolledClient.getEnrolledClients();
+        SmsEnrolledClientRepository smsEnrolledClient = KipApplication.getInstance().smsEnrolledClientRepository();
+        List<SmsEnrolledClient> enrolledClients = smsEnrolledClient.getEnrolledClients();
         if (enrolledClients !=null){
-            for (SmsErolledClient erolledClient : enrolledClients){
-                list.add(erolledClient.getPhoneNumber());
+            for (SmsEnrolledClient enrolledClient : enrolledClients){
+                list.add(enrolledClient.getPhoneNumber());
             }
         }
         return list;
