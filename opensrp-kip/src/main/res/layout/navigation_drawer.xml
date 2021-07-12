@@ -447,7 +447,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_vertical"
                                 android:layout_weight="1"
-                                android:text="KEPI Stock Control"
+                                android:text="KEPI Stock (Commodity)Control"
                                 android:textColor="@color/white"
                                 android:textSize="@dimen/me_page_section_text_size" />
 

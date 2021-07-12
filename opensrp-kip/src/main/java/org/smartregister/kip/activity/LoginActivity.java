@@ -67,7 +67,11 @@ public class LoginActivity extends BaseLoginActivity implements BaseLoginContrac
         finish();
     }
 
-
+//    private void goToCovid19VaccineStockSettings(boolean remote) {
+//        Intent intent = new Intent(this, Covid19VaccineStockSettingsEnterActivity.class);
+//        intent.putExtra(KipConstants.IntentKeyUtils.IS_REMOTE_LOGIN, remote);
+//        startActivity(intent);
+//    }
 
     @Override
     protected void attachBaseContext(Context base) {
